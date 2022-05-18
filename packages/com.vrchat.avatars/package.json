@@ -8,9 +8,9 @@
     "com.vrchat.base": "https://github.com/vrchat/packages.git?path=/packages/com.vrchat.base#3.0.4"
   },
   "author": {
-    "name": "VRChat",
+    "name": "VRChat, Tayou",
     "email": "developer@vrchat.com",
-    "url": "https://github.com/vrchat/packages"
+    "url": "https://github.com/TayouVR/vrchat-packages"
   },
   "legacyFolders": {
     "Assets\\VRCSDK": ""
@@ -18,7 +18,7 @@
   "legacyFiles": {
     "ProjectVersion.txt": ""
   },
-  "url": "https://github.com/vrchat/packages.git?path=/packages/com.vrchat.avatars#3.0.4",
+  "url": "https://github.com/TayouVR/vrchat-packages.git?path=/packages/com.vrchat.avatars#3.0.4",
   "samples": [
     {
       "displayName": "AV3 Demo Assets",
