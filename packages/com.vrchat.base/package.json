@@ -6,11 +6,11 @@
   "description": "Base for VRChat SDK",
   "vrchatVersion": "2022.1.1",
   "author": {
-    "name": "VRChat",
+    "name": "VRChat, Tayou",
     "email": "developer@vrchat.com",
-    "url": "https://github.com/vrchat/packages"
+    "url": "https://github.com/TayouVR/vrchat-packages"
   },
-  "url": "https://github.com/vrchat/packages.git?path=/packages/com.vrchat.base#3.0.4",
+  "url": "https://github.com/TayouVR/vrchat-packages.git?path=/packages/com.vrchat.base#3.0.4",
   "dependencies": {
     "com.unity.burst": "1.4.11",
     "com.unity.mathematics": "1.2.5"

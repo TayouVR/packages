@@ -431,8 +431,8 @@ namespace VRC.SDKBase.Editor
             EditorGUILayout.BeginVertical(GUILayout.Width(200));
             EditorGUILayout.Space();
 
-            GUI.enabled = _builder.NoGuiErrorsOrIssues() ||
-                          Core.APIUser.CurrentUser.developerType == Core.APIUser.DeveloperType.Internal;
+            GUI.enabled = true; /* _builder.NoGuiErrorsOrIssues() ||
+                          Core.APIUser.CurrentUser.developerType == Core.APIUser.DeveloperType.Internal;*/
             if (GUILayout.Button(VRCSdkControlPanel.GetBuildAndPublishButtonString()))
             {
                 bool buildBlocked = !VRCBuildPipelineCallbacks.OnVRCSDKBuildRequested(VRCSDKRequestedBuildType.Avatar);

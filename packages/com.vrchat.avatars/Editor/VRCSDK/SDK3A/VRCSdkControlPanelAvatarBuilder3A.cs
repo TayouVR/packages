@@ -496,10 +496,10 @@ namespace VRC.SDK3.Editor
             EditorGUILayout.BeginVertical(GUILayout.Width(300));
             EditorGUILayout.Space();
 
-            GUI.enabled = (EditorUserBuildSettings.activeBuildTarget == BuildTarget.StandaloneWindows ||
+            GUI.enabled = true; /* (EditorUserBuildSettings.activeBuildTarget == BuildTarget.StandaloneWindows ||
                            EditorUserBuildSettings.activeBuildTarget == BuildTarget.StandaloneWindows64) &&
                           (_builder.NoGuiErrorsOrIssues() || Core.APIUser.CurrentUser.developerType ==
-                              Core.APIUser.DeveloperType.Internal);
+                              Core.APIUser.DeveloperType.Internal);*/
 
             GUILayout.Label("Offline Testing", VRCSdkControlPanel.infoGuiStyle);
             if (GUI.enabled)
@@ -558,8 +558,8 @@ namespace VRC.SDK3.Editor
             EditorGUILayout.BeginVertical(GUILayout.Width(200));
             EditorGUILayout.Space();
 
-            GUI.enabled = _builder.NoGuiErrorsOrIssues() ||
-                          Core.APIUser.CurrentUser.developerType == Core.APIUser.DeveloperType.Internal;
+            GUI.enabled = true; /* _builder.NoGuiErrorsOrIssues() ||
+                          Core.APIUser.CurrentUser.developerType == Core.APIUser.DeveloperType.Internal;*/
             if (GUILayout.Button(VRCSdkControlPanel.GetBuildAndPublishButtonString()))
             {
                 bool buildBlocked = !VRCBuildPipelineCallbacks.OnVRCSDKBuildRequested(VRCSDKRequestedBuildType.Avatar);

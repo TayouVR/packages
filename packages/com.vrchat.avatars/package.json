@@ -5,7 +5,7 @@
   "unity": "2019.4",
   "description": "Our powerful Avatars 3.0 System",
   "gitDependencies": {
-    "com.vrchat.base": "https://github.com/vrchat/packages.git?path=/packages/com.vrchat.base#3.0.4"
+    "com.vrchat.base": "https://github.com/TayouVR/vrchat-packages.git?path=/packages/com.vrchat.base#3.0.4"
   },
   "author": {
     "name": "VRChat, Tayou",
