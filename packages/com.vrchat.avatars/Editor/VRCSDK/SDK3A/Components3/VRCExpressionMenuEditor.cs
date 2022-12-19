@@ -53,17 +53,28 @@ public class VRCExpressionsMenuEditor : Editor
 		var subParameters = entity.FindPropertyRelative("subParameters");
 		var labels = entity.FindPropertyRelative("labels");
 
-		float height = EditorGUIUtility.singleLineHeight * 1.25f;
-            
+		float height = EditorGUIUtility.singleLineHeight * 1.25f; // Foldout & Name
+			
 		if (entity.isExpanded) {
-			height += EditorGUIUtility.singleLineHeight * 1.25f; // Image
+			height += EditorGUIUtility.singleLineHeight * 1.25f; // Icon
 			height += EditorGUIUtility.singleLineHeight * 1.25f; // Type
-			height += EditorGUIUtility.singleLineHeight * 3.25f; // Type Help box
+			height += EditorGUIUtility.singleLineHeight * 3f; // Type Help box
 			height += EditorGUIUtility.singleLineHeight * 1.25f; // Parameter
-			height += EditorGUIUtility.singleLineHeight * 1.25f; // Value
-				
-			height += EditorGUIUtility.singleLineHeight * 1.25f; // Seperator Slider
-			height += EditorGUIUtility.singleLineHeight * 1.25f; // ??
+
+			string paramName = parameter.FindPropertyRelative("name").stringValue;
+			if (!string.IsNullOrEmpty(paramName)) {
+				var paramDef = FindExpressionParameterDef(paramName);
+				if (paramDef != null) {
+					if (paramDef.valueType == ExpressionParameters.ValueType.Int) {
+						height += EditorGUIUtility.singleLineHeight * 1.25f; // Value
+					} else if (paramDef.valueType == ExpressionParameters.ValueType.Float) {
+						height += EditorGUIUtility.singleLineHeight * 1.25f; // Value
+					}
+				} else {
+					height += EditorGUIUtility.singleLineHeight * 1.25f; // Value
+					height += EditorGUIUtility.singleLineHeight * 2.5f; // Warning Box
+				}
+			}
 
 			var controlType = (ExpressionControl.ControlType)type.intValue;
 			switch (controlType) {
@@ -72,17 +83,25 @@ public class VRCExpressionsMenuEditor : Editor
 				case VRCExpressionsMenu.Control.ControlType.Toggle:
 					break;
 				case VRCExpressionsMenu.Control.ControlType.SubMenu:
+					height += EditorGUIUtility.singleLineHeight * 1.25f; // Seperator Slider
+
 					height += EditorGUIUtility.singleLineHeight * 1.25f; // Sub Menu Object Field
 					break;
 				case VRCExpressionsMenu.Control.ControlType.TwoAxisPuppet:
+					height += EditorGUIUtility.singleLineHeight * 1.25f; // Seperator Slider
+
 					height += EditorGUIUtility.singleLineHeight * (1.25f) * 2; // Parameters
 					height += EditorGUIUtility.singleLineHeight * (1.25f * 3) * 4; // Labels
 					break;
 				case VRCExpressionsMenu.Control.ControlType.FourAxisPuppet:
+					height += EditorGUIUtility.singleLineHeight * 1.25f; // Seperator Slider
+
 					height += EditorGUIUtility.singleLineHeight * (1.25f) * 4; // Parameters
 					height += EditorGUIUtility.singleLineHeight * (1.25f * 3) * 4; // Labels
 					break;
 				case VRCExpressionsMenu.Control.ControlType.RadialPuppet:
+					height += EditorGUIUtility.singleLineHeight * 1.25f; // Seperator Slider
+
 					height += EditorGUIUtility.singleLineHeight * (1.25f); // Parameters
 					break;
 				default:
@@ -157,12 +176,16 @@ public class VRCExpressionsMenuEditor : Editor
 
 		//Foldout
 		EditorGUI.BeginChangeCheck();
-            
+			
 		rect.y += 2;
-		Rect _rect = new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight);
+		Rect _rect = new Rect(rect.x + 10, rect.y, rect.width/2 - 30, EditorGUIUtility.singleLineHeight);
 
-		entity.isExpanded = EditorGUI.Foldout(_rect, entity.isExpanded, name.stringValue, true);
-		
+		entity.isExpanded = EditorGUI.Foldout(_rect, entity.isExpanded, "", true);
+
+		_rect = new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight);
+		EditorGUI.PropertyField(_rect, name);
+		rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
+
 		if (!entity.isExpanded)
 			return;
 
@@ -171,20 +194,15 @@ public class VRCExpressionsMenuEditor : Editor
 			//Generic params
 			{
 
-				rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
-				_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
-				EditorGUI.PropertyField(_rect, name);
-
-				rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
 				_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 				EditorGUI.PropertyField(_rect, icon);
-
 				rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
+
 				_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 				EditorGUI.PropertyField(_rect, type);
-				
 				rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
-				_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight*3);
+
+				_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight*2.5f);
 				//Type Info
 				var controlType = (ExpressionControl.ControlType)type.intValue;
 				switch (controlType)
@@ -208,19 +226,14 @@ public class VRCExpressionsMenuEditor : Editor
 						EditorGUI.HelpBox(_rect, "Puppet menu that sets a value based on joystick rotation. (0 to 1)\nWhen opened the (Parameter) is set to (Value).\nWhen closed (Parameter) is reset to zero.", MessageType.Info);
 						break;
 				}
-			
-				rect.y += EditorGUIUtility.singleLineHeight * 3.25f;
+				rect.y += EditorGUIUtility.singleLineHeight * 2.75f;
+
 				_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 				DrawParameterDropDown(_rect, parameter, "Parameter");
 			
 				rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
 				_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 				DrawParameterValue(_rect, parameter, value);
-			
-				rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
-				_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
-				EditorGUI.LabelField(_rect, "", GUI.skin.horizontalSlider);
-				rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
 
 				//Style
 				/*if (controlType == ExpressionsControl.ControlType.Toggle)
@@ -232,73 +245,85 @@ public class VRCExpressionsMenuEditor : Editor
 				switch (controlType)
 				{
 					case ExpressionControl.ControlType.TwoAxisPuppet:
+						// Separator Slider
+						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
+						EditorGUI.LabelField(_rect, "", GUI.skin.horizontalSlider);
+						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
+
 						subParameters.arraySize = 2;
 						labels.arraySize = 4;
 
-			
+
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawParameterDropDown(_rect, subParameters.GetArrayElementAtIndex(0), "Parameter Horizontal", false);
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
-			
+
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawParameterDropDown(_rect, subParameters.GetArrayElementAtIndex(1), "Parameter Vertical", false);
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
 
-			
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawLabel(_rect, labels.GetArrayElementAtIndex(0), "Label Up");
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f * 3;
-			
+
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawLabel(_rect, labels.GetArrayElementAtIndex(1), "Label Right");
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f * 3;
-			
+
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawLabel(_rect, labels.GetArrayElementAtIndex(2), "Label Down");
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f * 3;
-			
+
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawLabel(_rect, labels.GetArrayElementAtIndex(3), "Label Left");
-						rect.y += EditorGUIUtility.singleLineHeight * 1.25f * 3;
 						break;
 					case ExpressionControl.ControlType.FourAxisPuppet:
+						// Separator Slider
+						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
+						EditorGUI.LabelField(_rect, "", GUI.skin.horizontalSlider);
+						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
+
 						subParameters.arraySize = 4;
 						labels.arraySize = 4;
 
-						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawParameterDropDown(_rect, subParameters.GetArrayElementAtIndex(0), "Parameter Up", false);
-			
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
+
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawParameterDropDown(_rect, subParameters.GetArrayElementAtIndex(1), "Parameter Right", false);
-			
+
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawParameterDropDown(_rect, subParameters.GetArrayElementAtIndex(2), "Parameter Down", false);
-			
+
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawParameterDropDown(_rect, subParameters.GetArrayElementAtIndex(3), "Parameter Left", false);
-
-			
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
+
+
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawLabel(_rect, labels.GetArrayElementAtIndex(0), "Label Up");
-			
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f * 3;
+
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawLabel(_rect, labels.GetArrayElementAtIndex(1), "Label Right");
-			
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f * 3;
+
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawLabel(_rect, labels.GetArrayElementAtIndex(2), "Label Down");
-			
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f * 3;
+
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						DrawLabel(_rect, labels.GetArrayElementAtIndex(3), "Label Left");
 						break;
 					case ExpressionControl.ControlType.RadialPuppet:
+						// Separator Slider
+						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
+						EditorGUI.LabelField(_rect, "", GUI.skin.horizontalSlider);
+						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
+
 						subParameters.arraySize = 1;
 						labels.arraySize = 0;
 
@@ -306,6 +331,12 @@ public class VRCExpressionsMenuEditor : Editor
 						DrawParameterDropDown(_rect, subParameters.GetArrayElementAtIndex(0), "Paramater Rotation", false);
 						break;
 					case VRCExpressionsMenu.Control.ControlType.SubMenu:
+						// Separator Slider
+						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
+						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
+						EditorGUI.LabelField(_rect, "", GUI.skin.horizontalSlider);
+						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
+
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						EditorGUI.PropertyField(_rect, subMenu);
 						break;
@@ -412,7 +443,6 @@ public class VRCExpressionsMenuEditor : Editor
 		string value = parameterName.stringValue;
 
 		bool parameterFound = false;
-		EditorGUILayout.BeginHorizontal();
 		{
 			if(activeDescriptor != null)
 			{
@@ -441,7 +471,7 @@ public class VRCExpressionsMenuEditor : Editor
 
 				//Dropdown
 				EditorGUI.BeginChangeCheck();
-				currentIndex = EditorGUI.Popup(new Rect(rect.x, rect.y, rect.width - 220, rect.height), name, currentIndex + 1, parameterNames);
+				currentIndex = EditorGUI.Popup(new Rect(rect.x, rect.y, rect.width - rect.width * 0.25f, rect.height), name, currentIndex + 1, parameterNames);
 				if (EditorGUI.EndChangeCheck())
 				{
 					if (currentIndex == 0)
@@ -453,23 +483,22 @@ public class VRCExpressionsMenuEditor : Editor
 			else
 			{
 				EditorGUI.BeginDisabledGroup(true);
-				EditorGUI.Popup(new Rect(rect.x, rect.y, rect.width - 220, rect.height), 0, new string[0]);
+				EditorGUI.Popup(new Rect(rect.x, rect.y, rect.width - rect.width * 0.25f, rect.height), 0, new string[0]);
 				EditorGUI.EndDisabledGroup();
 			}
 
 			//Text field
-			parameterName.stringValue = EditorGUI.TextField(new Rect(rect.width - 180, rect.y, 200, rect.height), parameterName.stringValue);
+			parameterName.stringValue = EditorGUI.TextField(new Rect(rect.width - rect.width * 0.25f + 40, rect.y, rect.width * 0.25f, rect.height), parameterName.stringValue);
 		}
-		EditorGUILayout.EndHorizontal();
 
 		if (!parameterFound)
 		{
-			EditorGUILayout.HelpBox("Parameter not found on the active avatar descriptor.", MessageType.Warning);
+			EditorGUI.HelpBox(new Rect(rect.x, rect.y + (EditorGUIUtility.singleLineHeight * 1.25f * 2), rect.width, EditorGUIUtility.singleLineHeight * 2), "Parameter not found on the active avatar descriptor.", MessageType.Warning);
 		}
 
 		if(!allowBool && param != null && param.valueType == ExpressionParameters.ValueType.Bool)
 		{
-			EditorGUILayout.HelpBox("Bool parameters not valid for this choice.", MessageType.Error);
+			EditorGUI.HelpBox(new Rect(rect.x, rect.y + (EditorGUIUtility.singleLineHeight * 1.25f * 2), rect.width, EditorGUIUtility.singleLineHeight * 2), "Bool parameters not valid for this choice.", MessageType.Error);
 		}
 	}
 	void DrawParameterValue(Rect rect, SerializedProperty parameter, SerializedProperty value)
