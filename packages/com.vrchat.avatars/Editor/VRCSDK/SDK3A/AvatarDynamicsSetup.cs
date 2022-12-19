@@ -113,8 +113,8 @@ namespace VRC.SDK3.Avatars
             try
             {
                 //Find types
-                var TypeDynamicBone = ValidationUtils.GetTypeFromName("DynamicBone");
-                var TypeDynamicBoneCollider = ValidationUtils.GetTypeFromName("DynamicBoneCollider");
+                var TypeDynamicBone = TypeUtils.GetTypeFromName("DynamicBone");
+                var TypeDynamicBoneCollider = TypeUtils.GetTypeFromName("DynamicBoneCollider");
                 if (TypeDynamicBone == null || TypeDynamicBoneCollider == null)
                 {
                     EditorUtility.DisplayDialog("Error", "DynamicBone not found in the project.", "Okay");
@@ -146,6 +146,7 @@ namespace VRC.SDK3.Avatars
                 foreach (var db in dbList)
                 {
                     var data = new PhysBoneMigration.DynamicBoneData();
+                    data.enabled = ((MonoBehaviour)db).enabled;
                     data.gameObject = db.gameObject;
                     data.root = (Transform)TypeDynamicBone.GetField("m_Root").GetValue(db);
                     data.exclusions = (List<Transform>)TypeDynamicBone.GetField("m_Exclusions").GetValue(db);

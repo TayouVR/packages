@@ -1,94 +1,61 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
+using System.Threading.Tasks;
 using UnityEditor;
-using UnityEditor.PackageManager.UI;
-using UnityEngine;
+using UnityEditor.SceneManagement;
+using VRC.SDKBase.Editor.Source.Helpers;
 
 namespace VRC.SDK3A.Editor
 {
     [InitializeOnLoad]
     public class SDK3AImportFix
     {
-        private const string packageRuntimePluginsFolder = "Packages/com.vrchat.avatars/Runtime/VRCSDK/Plugins";
-        private const string legacyRuntimePluginsFolder = "Assets/VRCSDK/Plugins/";
-        private const string reloadPluginsKey = "ReloadPlugins";
+        private const string avatarsReimportedKey = "AVATARS_REIMPORTED";
         
-        private static readonly HashSet<string> _samplesToImport = new HashSet<string>()
-        {
-            "AV3 Demo Assets",
-            "Robot Avatar"
-        };
-        
+        private const string exampleScenePath =
+            "Packages/com.vrchat.avatars/Samples/Dynamics/Robot Avatar/Avatar Dynamics Robot Avatar.unity";
+
         static SDK3AImportFix()
         {
-            var reloadsUntilRun = SessionState.GetInt(reloadPluginsKey, 0);
-            if (reloadsUntilRun > -1)
+            // Skip if we've already checked for the canary file during this Editor Session
+            if (!SessionState.GetBool(avatarsReimportedKey, false))
             {
-                reloadsUntilRun--;
-                if (reloadsUntilRun == 0)
+                // Check for canary file in Library - package probably needs a reimport after a Library wipe
+                string canaryFilePath = Path.Combine("Library", avatarsReimportedKey);
+                if (File.Exists(canaryFilePath))
                 {
-                    Run();
+                    SessionState.SetBool(avatarsReimportedKey, true);
                 }
-                SessionState.SetInt(reloadPluginsKey, reloadsUntilRun);
+                else
+                {
+#pragma warning disable 4014
+                    ReloadSDK();
+#pragma warning restore 4014
+                    File.WriteAllText(canaryFilePath, avatarsReimportedKey);
+                }
             }
-            CheckForSampleImport();
         }
-        
-        private static void CheckForSampleImport()
-        {
-#if VRCUPM
-            // Get package info for this assembly
-            var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(SDK3AImportFix).Assembly);
 
-            // Exit early if package cannot be found
-            if (packageInfo == null)
+        [MenuItem("VRChat SDK/Samples/Avatar Dynamics Robot Avatar")]
+        private static void OpenAvatarsExampleScene()
+        {
+            if(EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             {
-                return;
+                EditorSceneManager.OpenScene(exampleScenePath);
             }
-            
-            // Check if samples have ever been imported, exit if they have
-            var settings = VRCPackageSettings.Create();
-            if (settings.samplesImported)
-            {
-                return;
-            }
-            
-            var samples = Sample.FindByPackage(packageInfo.name, packageInfo.version);
-            foreach (var sample in samples)
-            {
-                if (!sample.isImported && _samplesToImport.Contains(sample.displayName))
-                {
-                    if (sample.Import(Sample.ImportOptions.HideImportWindow |
-                                      Sample.ImportOptions.OverridePreviousImports))
-                    {
-                        Debug.Log($"Automatically Imported the required sample {sample.displayName}");
-                        settings.samplesImported = true;
-                        settings.Save();
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Could not Import required sample {sample.displayName}");
-                    }
-                }
-            }
-#endif    
         }
-        
-        public static void Run(){
-            if (Directory.Exists(packageRuntimePluginsFolder))
+
+        public static async Task ReloadSDK()
+        {
+            // Set session key to true, limiting the reload to one run per session
+            SessionState.SetBool(avatarsReimportedKey, true);
+            
+            //Wait for project to finish compiling
+            while (EditorApplication.isCompiling || EditorApplication.isUpdating)
             {
-                AssetDatabase.ImportAsset($"{packageRuntimePluginsFolder}/VRCSDK3A.dll",
-                    ImportAssetOptions.ForceSynchronousImport);
-                AssetDatabase.ImportAsset($"{packageRuntimePluginsFolder}/VRCSDK3A-Editor.dll",
-                    ImportAssetOptions.ForceSynchronousImport);
+                await Task.Delay(250);
             }
-            else if (Directory.Exists(legacyRuntimePluginsFolder))
-            {
-                AssetDatabase.ImportAsset($"{legacyRuntimePluginsFolder}/VRCSDK3A.dll",
-                    ImportAssetOptions.ForceSynchronousImport);
-                AssetDatabase.ImportAsset($"{legacyRuntimePluginsFolder}/VRCSDK3A-Editor.dll",
-                    ImportAssetOptions.ForceSynchronousImport);
-            }
+            
+            ReloadUtil.ReloadSDK();
         }
     }
 }
