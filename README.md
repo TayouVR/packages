@@ -1,8 +1,7 @@
-# VRChat Packages
+# VRChat Packages Fork
 
-This repo is a public repository for the new [VRChat Package Manager](https://docs.vrchat.com/v2021.4.1/docs/package-manager) which is in Closed Beta.
-
-We'll announce when it's ready for an Open Beta so you can join in!
+This repo is a Maintained Fork of the [VRChat Packages](https://github.com/vrchat/packages) repository for the [VRChat Package Manager](https://docs.vrchat.com/v2021.4.1/docs/package-manager)
+The Packages in this fork work i nthe Unity Package Manager o ntheir own. I miht add Auto Updating in Unity eventually too.
 
 # tweaks-applied Branch
 ### This branch adds a few QOL tweaks, which are all in pull requests on the main repo too.
