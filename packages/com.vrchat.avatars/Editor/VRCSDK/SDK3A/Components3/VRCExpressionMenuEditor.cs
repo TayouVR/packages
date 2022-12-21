@@ -230,10 +230,14 @@ public class VRCExpressionsMenuEditor : Editor
 
 				_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 				DrawParameterDropDown(_rect, parameter, "Parameter");
-			
 				rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
-				_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
-				DrawParameterValue(_rect, parameter, value);
+
+				{
+					float rect_y = rect.y;
+					_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
+					DrawParameterValue(_rect, parameter, value, ref rect_y);
+					rect.y = rect_y;
+				}
 
 				//Style
 				/*if (controlType == ExpressionsControl.ControlType.Toggle)
@@ -332,7 +336,6 @@ public class VRCExpressionsMenuEditor : Editor
 						break;
 					case VRCExpressionsMenu.Control.ControlType.SubMenu:
 						// Separator Slider
-						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
 						_rect = new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight);
 						EditorGUI.LabelField(_rect, "", GUI.skin.horizontalSlider);
 						rect.y += EditorGUIUtility.singleLineHeight * 1.25f;
@@ -501,7 +504,7 @@ public class VRCExpressionsMenuEditor : Editor
 			EditorGUI.HelpBox(new Rect(rect.x, rect.y + (EditorGUIUtility.singleLineHeight * 1.25f * 2), rect.width, EditorGUIUtility.singleLineHeight * 2), "Bool parameters not valid for this choice.", MessageType.Error);
 		}
 	}
-	void DrawParameterValue(Rect rect, SerializedProperty parameter, SerializedProperty value)
+	void DrawParameterValue(Rect rect, SerializedProperty parameter, SerializedProperty value, ref float rect_y)
 	{
 		string paramName = parameter.FindPropertyRelative("name").stringValue;
 		if (!string.IsNullOrEmpty(paramName))
@@ -512,10 +515,12 @@ public class VRCExpressionsMenuEditor : Editor
 				if (paramDef.valueType == ExpressionParameters.ValueType.Int)
 				{
 					value.floatValue = EditorGUI.IntField(rect, "Value", Mathf.Clamp((int)value.floatValue, 0, 255));
+					rect_y += EditorGUIUtility.singleLineHeight * 1.25f;
 				}
 				else if (paramDef.valueType == ExpressionParameters.ValueType.Float)
 				{
 					value.floatValue = EditorGUI.FloatField(rect, "Value", Mathf.Clamp(value.floatValue, -1f, 1f));
+					rect_y += EditorGUIUtility.singleLineHeight * 1.25f;
 				}
 				else if(paramDef.valueType == ExpressionParameters.ValueType.Bool)
 				{
