@@ -59,6 +59,7 @@ public partial class AvatarDescriptorEditor3 : Editor
 
     public override void OnInspectorGUI()
     {
+        _repaint = false;
         serializedObject.Update();
 
         if(VRCSdkControlPanel.window != null)
