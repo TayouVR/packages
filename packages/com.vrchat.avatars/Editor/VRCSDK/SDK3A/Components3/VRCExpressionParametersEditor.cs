@@ -12,15 +12,64 @@ using ExpressionParameter = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionPara
 [CustomEditor(typeof(ExpressionParameters))]
 public class VRCExpressionParametersEditor : UnityEditor.Editor
 {
-	private const int TypeWidth = 60;
+    private const int ParamCountLabelWidth = 20;
+    private const int TypeWidth = 60;
 	private const int DefaultWidth = 50;
-	private const int SavedWidth = 40;
+	private const int SavedWidth = 50;
+    private const int SyncedWidth = 45;
 
-	private AnimatorController controllerToTransfer;
+    private AnimatorController controllerToTransfer;
 	
 	private ReorderableList list;
-	
-	public void OnEnable()
+
+    public enum Column {
+        OverallParamCount,
+        Type,
+        ParameterName,
+        Default,
+        Saved,
+        Synced
+    }
+
+	private Rect GetColumnSection(Column column, Rect rect, bool isHeader = false, bool isToggle = false) {
+		int _paramCountLabelWidth = isHeader ? ParamCountLabelWidth : 0;
+
+		Rect _rect = new Rect(rect);
+		_rect.height = EditorGUIUtility.singleLineHeight;
+
+        switch (column) {
+            case Column.OverallParamCount:
+                _rect.width = _paramCountLabelWidth;
+                _rect.x = rect.x;
+                break;
+            case Column.Type:
+                _rect.width = TypeWidth;
+                _rect.x = rect.x + _paramCountLabelWidth;
+                break;
+            case Column.ParameterName:
+                _rect.width = rect.width - (DefaultWidth + SavedWidth + SyncedWidth + TypeWidth);
+                _rect.x = rect.x + _paramCountLabelWidth + TypeWidth;
+                break;
+            case Column.Default:
+                _rect.width = DefaultWidth;
+                _rect.x = rect.x + rect.width - (DefaultWidth + SyncedWidth + SavedWidth) + (isToggle ? _rect.width / 2 - 4 : 0);
+                if (isToggle) _rect.width = EditorGUIUtility.singleLineHeight;
+                break;
+            case Column.Saved:
+                _rect.width = SavedWidth;
+                _rect.x = rect.x + rect.width - (SyncedWidth + SavedWidth) + (isToggle ? _rect.width / 2 - 4 : 0);
+                if (isToggle) _rect.width = EditorGUIUtility.singleLineHeight;
+                break;
+            case Column.Synced:
+                _rect.width = SyncedWidth;
+                _rect.x = rect.x + rect.width - SyncedWidth + (isToggle ? _rect.width / 2 - 4 : 0);
+				if (isToggle) _rect.width = EditorGUIUtility.singleLineHeight;
+                break;
+        }
+		return _rect;
+    }
+
+    public void OnEnable()
 	{
 		//Init parameters
 		var customExpressionParams = target as ExpressionParameters;
@@ -35,78 +84,48 @@ public class VRCExpressionParametersEditor : UnityEditor.Editor
 	}
 		
 	private void OnDrawHeader(Rect rect) {
-		//rect.y += 2;
-		
-		Rect _rect = new Rect(rect.x-5, rect.y, 25, EditorGUIUtility.singleLineHeight);
-		EditorGUI.LabelField(_rect, $"{list.count}");
-		
-		rect.x += 15;
-		rect.width -= 15;
-		
-		_rect = new Rect(rect.x + 5, rect.y, TypeWidth, EditorGUIUtility.singleLineHeight);
-		EditorGUI.LabelField(_rect, "Type");
+        // the default size of the rect is bs, need to shift it to the left and make it wider to fit the entire space
+        rect.x -= 5;
+        rect.width += 5;
 
-		rect.x += TypeWidth + 10;
-		rect.width -= TypeWidth + 10;
-		
-		_rect = new Rect(rect.x, rect.y, rect.width - (5 + DefaultWidth + 5 + SavedWidth), EditorGUIUtility.singleLineHeight);
-		EditorGUI.LabelField(_rect, "Name");
+        var centeredStyle = new GUIStyle(GUI.skin.GetStyle("Label")) {
+            alignment = TextAnchor.UpperCenter
+        };
 
-		rect.x += rect.width - (DefaultWidth + 5 + SavedWidth);
-		rect.width = 5 + DefaultWidth + 5 + SavedWidth;
-		
-		_rect = new Rect(rect.x, rect.y, DefaultWidth, EditorGUIUtility.singleLineHeight);
-		EditorGUI.LabelField(_rect, "Default");
+        EditorGUI.LabelField(GetColumnSection(Column.OverallParamCount, rect, true), $"{list.count}");
+		EditorGUI.LabelField(GetColumnSection(Column.Type, rect, true), "Type", centeredStyle);
+		EditorGUI.LabelField(GetColumnSection(Column.ParameterName, rect, true), "Name", centeredStyle);
+		EditorGUI.LabelField(GetColumnSection(Column.Default, rect, true), "Default", centeredStyle);
+		EditorGUI.LabelField(GetColumnSection(Column.Saved, rect, true), "Saved", centeredStyle);
+        EditorGUI.LabelField(GetColumnSection(Column.Synced, rect, true), "Synced", centeredStyle);
 
-		rect.x += DefaultWidth + 5;
-		rect.width -= DefaultWidth + 5;
-		
-		_rect = new Rect(rect.x, rect.y, SavedWidth, EditorGUIUtility.singleLineHeight);
-		EditorGUI.LabelField(_rect, "Saved");
-		
-	}
+    }
 		
 	private void OnDrawElement(Rect rect, int index, bool isActive, bool isFocused) {
 		var element = list.serializedProperty.GetArrayElementAtIndex(index);
-		rect.y += 2;
-			
-		Rect _rect = new Rect(rect.x + 5, rect.y, TypeWidth, EditorGUIUtility.singleLineHeight);
-		EditorGUI.PropertyField(_rect, element.FindPropertyRelative("valueType"), GUIContent.none);
 
-		rect.x += TypeWidth + 10;
-		rect.width -= TypeWidth + 10;
-		
-		_rect = new Rect(rect.x, rect.y, rect.width - (5 + DefaultWidth + 5 + SavedWidth), EditorGUIUtility.singleLineHeight);
-		EditorGUI.PropertyField(_rect, element.FindPropertyRelative("name"), GUIContent.none );
+        EditorGUI.PropertyField(GetColumnSection(Column.Type, rect), element.FindPropertyRelative("valueType"), GUIContent.none);
 
-		rect.x += rect.width - (DefaultWidth + 5 + SavedWidth);
-		rect.width = 5 + DefaultWidth + 5 + SavedWidth;
+        EditorGUI.PropertyField(GetColumnSection(Column.ParameterName, rect), element.FindPropertyRelative("name"), GUIContent.none );
 
-		_rect = new Rect(rect.x, rect.y, DefaultWidth, EditorGUIUtility.singleLineHeight);
 		SerializedProperty defaultValue = element.FindPropertyRelative("defaultValue");
 		var type = (ExpressionParameters.ValueType)element.FindPropertyRelative("valueType").intValue;
 		switch(type)
 		{
 			case ExpressionParameters.ValueType.Int:
-				defaultValue.floatValue = Mathf.Clamp(EditorGUI.IntField(_rect, (int)defaultValue.floatValue), 0, 255);
+				defaultValue.floatValue = Mathf.Clamp(EditorGUI.IntField(GetColumnSection(Column.Default, rect), (int)defaultValue.floatValue), 0, 255);
 				break;
 			case ExpressionParameters.ValueType.Float:
-				defaultValue.floatValue = Mathf.Clamp(EditorGUI.FloatField(_rect, defaultValue.floatValue), -1f, 1f);
+				defaultValue.floatValue = Mathf.Clamp(EditorGUI.FloatField(GetColumnSection(Column.Default, rect), defaultValue.floatValue), -1f, 1f);
 				break;
 			case ExpressionParameters.ValueType.Bool:
-				_rect.x += 20;
-				_rect.width -= 20;
-				defaultValue.floatValue = EditorGUI.Toggle(_rect, defaultValue.floatValue != 0 ? true : false) ? 1f : 0f;
+				defaultValue.floatValue = EditorGUI.Toggle(GetColumnSection(Column.Default, rect, false, true), defaultValue.floatValue != 0 ? true : false) ? 1f : 0f;
 				break;
 		}
+		EditorGUI.PropertyField(GetColumnSection(Column.Saved, rect, false, true), element.FindPropertyRelative("saved"), GUIContent.none);
 
-		rect.x += DefaultWidth + 5 + 13;
-		rect.width -= DefaultWidth + 5 + 13;
-		
-		_rect = new Rect(rect.x, rect.y, SavedWidth, EditorGUIUtility.singleLineHeight);
-		EditorGUI.PropertyField(_rect,
-		                        element.FindPropertyRelative("saved"), GUIContent.none );
-	}
+        EditorGUI.PropertyField(GetColumnSection(Column.Synced, rect, false, true), element.FindPropertyRelative("networkSynced"), GUIContent.none);
+    }
 
 	public override void OnInspectorGUI()
 	{
@@ -163,86 +182,73 @@ public class VRCExpressionParametersEditor : UnityEditor.Editor
 			}
 		}
 		serializedObject.ApplyModifiedProperties();
-	}
+    }
 
-	private string FindAnimatorParameterMatch()
-	{
-		var expressionParameters = target as ExpressionParameters;
-		List<AnimatorControllerParameter> controllerParamsList = new List<AnimatorControllerParameter>(controllerToTransfer.parameters);
-		List<string> matchingParameters = new List<string>();
+    private string FindAnimatorParameterMatch() {
+        var expressionParameters = target as ExpressionParameters;
+        List<AnimatorControllerParameter> controllerParamsList = new List<AnimatorControllerParameter>(controllerToTransfer.parameters);
+        List<string> matchingParameters = new List<string>();
 
-		foreach (var parameter in expressionParameters.parameters)
-		{
-			bool parameterExists = false;
-			//AnimatorControllerParameter foundControllerParameter = null;
-			foreach (var controllerParameter in controllerToTransfer.parameters)
-			{
-				if (controllerParameter.name == parameter.name)
-				{
-					parameterExists = true;
-					//foundControllerParameter = controllerParameter;
-					break;
-				}
-			}
+        foreach (var parameter in expressionParameters.parameters) {
+            bool parameterExists = false;
+            //AnimatorControllerParameter foundControllerParameter = null;
+            foreach (var controllerParameter in controllerToTransfer.parameters) {
+                if (controllerParameter.name == parameter.name) {
+                    parameterExists = true;
+                    //foundControllerParameter = controllerParameter;
+                    break;
+                }
+            }
 
-			if (!parameterExists)
-			{
-				matchingParameters.Add(parameter.name);
-			}
-		}
+            if (!parameterExists) {
+                matchingParameters.Add(parameter.name);
+            }
+        }
 
-		return string.Join(", ", matchingParameters);
-	}
+        return string.Join(", ", matchingParameters);
+    }
 
-	private void TransferToAnimatorController()
-	{
-		var expressionParameters = target as ExpressionParameters;
-		List<AnimatorControllerParameter> controllerParamsList = new List<AnimatorControllerParameter>(controllerToTransfer.parameters);
+    private void TransferToAnimatorController() {
+        var expressionParameters = target as ExpressionParameters;
+        List<AnimatorControllerParameter> controllerParamsList = new List<AnimatorControllerParameter>(controllerToTransfer.parameters);
 
-		foreach (var parameter in expressionParameters.parameters)
-		{
-			bool parameterExists = false;
-			//AnimatorControllerParameter foundControllerParameter = null;
-			foreach (var controllerParameter in controllerToTransfer.parameters)
-			{
-				if (controllerParameter.name == parameter.name)
-				{
-					parameterExists = true;
-					//foundControllerParameter = controllerParameter;
-					break;
-				}
-			}
+        foreach (var parameter in expressionParameters.parameters) {
+            bool parameterExists = false;
+            //AnimatorControllerParameter foundControllerParameter = null;
+            foreach (var controllerParameter in controllerToTransfer.parameters) {
+                if (controllerParameter.name == parameter.name) {
+                    parameterExists = true;
+                    //foundControllerParameter = controllerParameter;
+                    break;
+                }
+            }
 
-			if (!parameterExists)
-			{
-				controllerParamsList.Add(new AnimatorControllerParameter()
-				{
-					name = parameter.name,
-					defaultBool = parameter.defaultValue > 0.5,
-					defaultFloat = parameter.defaultValue,
-					defaultInt = (int)Math.Floor(parameter.defaultValue),
-					type = VRCType2UnityType(parameter.valueType)
-				});
-			}
-		}
+            if (!parameterExists) {
+                controllerParamsList.Add(new AnimatorControllerParameter() {
+                    name = parameter.name,
+                    defaultBool = parameter.defaultValue > 0.5,
+                    defaultFloat = parameter.defaultValue,
+                    defaultInt = (int)Math.Floor(parameter.defaultValue),
+                    type = VRCType2UnityType(parameter.valueType)
+                });
+            }
+        }
 
-		controllerToTransfer.parameters = controllerParamsList.ToArray();
-	}
+        controllerToTransfer.parameters = controllerParamsList.ToArray();
+    }
 
-	private AnimatorControllerParameterType VRCType2UnityType(ExpressionParameters.ValueType type)
-	{
-		switch (type)
-		{
-			case ExpressionParameters.ValueType.Int:
-				return AnimatorControllerParameterType.Int;
-			case ExpressionParameters.ValueType.Float:
-				return AnimatorControllerParameterType.Float;
-			case ExpressionParameters.ValueType.Bool:
-				return AnimatorControllerParameterType.Bool;
-			default:
-				throw new ArgumentOutOfRangeException(nameof(type), type, null);
-		}
-	}
+    private AnimatorControllerParameterType VRCType2UnityType(ExpressionParameters.ValueType type) {
+        switch (type) {
+            case ExpressionParameters.ValueType.Int:
+                return AnimatorControllerParameterType.Int;
+            case ExpressionParameters.ValueType.Float:
+                return AnimatorControllerParameterType.Float;
+            case ExpressionParameters.ValueType.Bool:
+                return AnimatorControllerParameterType.Bool;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(type), type, null);
+        }
+    }
 
 	void InitExpressionParameters(bool populateWithDefault)
 	{
